@@ -1,3 +1,5 @@
+**Read this in other languages:**
+[English](README_en.md) | [中文](README.md) 
 # Match-Pause-Manager-for-CSGO
 适用于CSGO竞技比赛服务器，基于Source Mod 1.11.0编译的仿比赛风格的游戏暂停处理插件
 
