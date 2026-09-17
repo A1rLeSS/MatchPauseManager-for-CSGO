@@ -1,3 +1,5 @@
+**Read this in other languages:**
+[English](README_en.md) | [中文](README.md) 
 # Match-Pause-Manager-for-CSGO
 A tournament-style game pause management plugin for CS:GO competitive match servers, compiled based on Source Mod 1.11.0
 
