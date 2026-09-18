@@ -2446,6 +2446,3 @@ public Action OnClientSayCommand(
      * Plugin_Continue allows the original chat message
      * to continue normally.
      */
-
-    return Plugin_Continue;
-}
