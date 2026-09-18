@@ -2422,12 +2422,20 @@ public Action OnClientSayCommand(
         client > 0 &&
         IsClientInGame(client))
     {
-        PrintToChat(
-            client,
-            "%s \x07WARNING:\x01 Communication is not allowed during technical timeouts！",
-            PREFIX
+        if (sArgs[0] == '!' || sArgs[0] == '/'|| sArgs[0] == '.')
+        {
+            return Plugin_Continue;
+        }
+            PrintToChat(
+                client,
+                "%s \x07WARNING:\x01 Communication is not allowed during technical timeouts！",
+                PREFIX
         );
+            return Plugin_Continue;
     }
+
+    return Plugin_Continue;
+}
 
 
     /*
