@@ -5,7 +5,7 @@
 #include <cstrike>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.2.2"
+#define PLUGIN_VERSION "1.2.3"
 
 #define PREFIX "[CM]"
 
@@ -103,6 +103,7 @@ int g_iTacRemaining[MATCH_TEAM_COUNT];
 
 bool g_bTacUsedThisRound[MATCH_TEAM_COUNT];
 
+int g_iLastOTSideSwitchScore = -1;
 
 /*
  * Actual tactical countdown timer.
@@ -425,6 +426,9 @@ void ResetMatchState()
         -1;
 
     g_iLastResetOTSegment =
+        -1;
+
+    g_iLastOTSideSwitchScore =
         -1;
 }
 
@@ -1174,13 +1178,6 @@ int GetTeamScoreSafe(int team)
 
 void HandleSideSwitch()
 {
-    if (g_cvOvertimeEnable != null &&
-        g_cvOvertimeEnable.BoolValue)
-    {
-        return;
-    }
-
-
     if (g_bNormalSideSwitched)
     {
         return;
@@ -1257,15 +1254,11 @@ void HandleOvertime()
         return;
     }
 
-
     int maxRounds = 30;
-
 
     if (g_cvMaxRounds != null)
     {
-        maxRounds =
-            g_cvMaxRounds.IntValue;
-
+        maxRounds = g_cvMaxRounds.IntValue;
 
         if (maxRounds <= 0)
         {
@@ -1273,80 +1266,131 @@ void HandleOvertime()
         }
     }
 
+    int tScore = GetTeamScoreSafe(CS_TEAM_T);
+    int ctScore = GetTeamScoreSafe(CS_TEAM_CT);
 
-    int tScore =
-        GetTeamScoreSafe(CS_TEAM_T);
+    int totalScore = tScore + ctScore;
 
-
-    int ctScore =
-        GetTeamScoreSafe(CS_TEAM_CT);
-
-
-    int totalScore =
-        tScore + ctScore;
-
-
+    /*
+     * Regular time didn't end
+     */
     if (totalScore < maxRounds)
     {
         return;
     }
 
-
+    /*
+     * Only a draw can lead to OT
+     */
     if (tScore != ctScore)
     {
         return;
     }
 
+    int otRounds = GetOTSegmentRounds();
 
-    int otRounds =
-        GetOTSegmentRounds();
+    if (otRounds <= 0)
+    {
+        return;
+    }
 
+    /*
+     * Rounds passed during OT
+     *
+     * eg.
+     *
+     * MR15:
+     * 15:15 -> OT start，otScore = 0
+     */
+    int otScore = totalScore - maxRounds;
 
-    int segment =
-        (totalScore - maxRounds) / otRounds;
+    /*
+     * for a MR3 OT：
+     * otRounds = 6
+     * halfOT = 3
+     */
+    int halfOT = otRounds / 2;
 
+    if (halfOT <= 0)
+    {
+        return;
+    }
+
+    /*
+     * ==========================================
+     * OT Half Round Switch
+     * ==========================================
+     *
+     * OT Segment Start：
+     *     No Switch
+     *
+     * OT Segment Half：
+     *     Switch
+     *
+     * OT Segment End：
+     *     No Switch for into a new Segment 
+     *
+     * eg. MR3 OT：
+     *
+     * OT1:
+     * 0, 1, 2
+     * --------
+     * 3 -> Switch
+     * 4, 5
+     *
+     * OT2:
+     * 6 -> No Switch
+     * 7, 8
+     * --------
+     * 9 -> Switch
+     */
+    int segmentPosition = otScore % otRounds;
+
+    if (segmentPosition == halfOT)
+    {
+        if (g_iLastOTSideSwitchScore != totalScore)
+        {
+            g_iLastOTSideSwitchScore = totalScore;
+
+            SwapMatchTeams();
+        }
+    }
+
+    /*
+     * ==========================================
+     * OT Segment Pause Refresh
+     * ==========================================
+     *
+     * Once into a new OT Segment，
+     * Two teams get a new OT tactical pause opportunit。
+     *
+     * But don't SwapMatchTeams()。
+     */
+    int segment = otScore / otRounds;
 
     if (segment != g_iCurrentOTSegment)
     {
-        g_iCurrentOTSegment =
-            segment;
+        g_iCurrentOTSegment = segment;
 
+        int count = 0;
 
-        SwapMatchTeams();
-    }
-
-
-    if (g_iLastResetOTSegment != segment)
-    {
-        g_iLastResetOTSegment =
-            segment;
-
-
-        int count =
-            g_cvOTCount.IntValue;
-
-
-        if (count < 0)
+        if (g_cvOTCount != null)
         {
-            count = 0;
+            count = g_cvOTCount.IntValue;
+
+            if (count < 0)
+            {
+                count = 0;
+            }
         }
 
+        g_iTacRemaining[MATCH_TEAM_A] = count;
+        g_iTacRemaining[MATCH_TEAM_B] = count;
 
-        g_iTacRemaining[MATCH_TEAM_A] =
-            count;
-
-        g_iTacRemaining[MATCH_TEAM_B] =
-            count;
-
-
-        g_bTacUsedThisRound[MATCH_TEAM_A] =
-            false;
-
-        g_bTacUsedThisRound[MATCH_TEAM_B] =
-            false;
+        g_bTacUsedThisRound[MATCH_TEAM_A] = false;
+        g_bTacUsedThisRound[MATCH_TEAM_B] = false;
     }
 }
-
 
 /* =========================================================
  * TACTICAL PAUSE COMMAND
