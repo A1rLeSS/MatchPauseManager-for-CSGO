@@ -5,7 +5,7 @@
 #include <cstrike>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.2.4"
+#define PLUGIN_VERSION "1.2.3"
 
 #define PREFIX "[CM]"
 
@@ -94,9 +94,6 @@ public Plugin myinfo =
 
 int g_iMatchTeamForSide[4];
 
-#define MATCH_TEAM_NAME_LENGTH 64
-
-char g_sMatchTeamName[MATCH_TEAM_COUNT][MATCH_TEAM_NAME_LENGTH];
 
 /* =========================================================
  * TACTICAL TIMEOUT
@@ -433,25 +430,6 @@ void ResetMatchState()
 
     g_iLastOTSideSwitchScore =
         -1;
-
-    g_sMatchTeamName[MATCH_TEAM_A][0] = '\0';
-    g_sMatchTeamName[MATCH_TEAM_B][0] = '\0';
-
-    if (g_cvTeamName1 != null)
-    {
-        g_cvTeamName1.GetString(
-            g_sMatchTeamName[MATCH_TEAM_A],
-            MATCH_TEAM_NAME_LENGTH
-        );
-    }
-
-    if (g_cvTeamName2 != null)
-    {
-        g_cvTeamName2.GetString(
-            g_sMatchTeamName[MATCH_TEAM_B],
-            MATCH_TEAM_NAME_LENGTH
-        );
-    }
 }
 
 
@@ -594,46 +572,64 @@ void GetMatchTeamName(
 {
     buffer[0] = '\0';
 
-    if (matchTeam < 0 ||
-        matchTeam >= MATCH_TEAM_COUNT)
+
+    if (matchTeam == MATCH_TEAM_A)
     {
-        strcopy(
-            buffer,
-            maxlen,
-            "Unknown"
-        );
+        if (g_cvTeamName1 != null)
+        {
+            g_cvTeamName1.GetString(
+                buffer,
+                maxlen
+            );
+        }
+
+
+        if (buffer[0] == '\0')
+        {
+            strcopy(
+                buffer,
+                maxlen,
+                "Team A"
+            );
+        }
+
 
         return;
     }
+
+
+    if (matchTeam == MATCH_TEAM_B)
+    {
+        if (g_cvTeamName2 != null)
+        {
+            g_cvTeamName2.GetString(
+                buffer,
+                maxlen
+            );
+        }
+
+
+        if (buffer[0] == '\0')
+        {
+            strcopy(
+                buffer,
+                maxlen,
+                "Team B"
+            );
+        }
+
+
+        return;
+    }
+
 
     strcopy(
         buffer,
         maxlen,
-        g_sMatchTeamName[matchTeam]
+        "Unknown"
     );
-
-    if (buffer[0] != '\0')
-    {
-        return;
-    }
-
-    if (matchTeam == MATCH_TEAM_A)
-    {
-        strcopy(
-            buffer,
-            maxlen,
-            "Team A"
-        );
-    }
-    else
-    {
-        strcopy(
-            buffer,
-            maxlen,
-            "Team B"
-        );
-    }
 }
+
 
 void SwapMatchTeams()
 {
