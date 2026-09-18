@@ -5,7 +5,7 @@
 #include <cstrike>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.2.2"
 
 #define PREFIX "[CM]"
 
@@ -1215,7 +1215,7 @@ void HandleSideSwitch()
         tScore + ctScore;
 
 
-    if (totalScore >= maxRounds)
+    if (totalScore >= maxRounds / 2)
     {
         g_bNormalSideSwitched =
             true;
