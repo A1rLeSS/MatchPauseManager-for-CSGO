@@ -2400,7 +2400,12 @@ void InternalUnpauseMatch()
 /* =========================================================
  * CHAT
  *
- * Normal chat remains untouched.
+ * Technical pause:
+ *
+ * Chat is NOT blocked.
+ * The player's message is still allowed to appear normally.
+ *
+ * The plugin only sends a warning to the player who chatted.
  * ========================================================= */
 
 public Action OnClientSayCommand(
@@ -2409,5 +2414,31 @@ public Action OnClientSayCommand(
     const char[] sArgs
 )
 {
+    if (g_PauseState == PAUSE_TECHNICAL &&
+        client > 0 &&
+        IsClientInGame(client))
+    {
+	      if (sArgs[0] == '!' || sArgs[0] == '/'|| sArgs[0] == '.')
+        {
+            return Plugin_Continue;
+        }
+            PrintToChat(
+                client,
+                "%s \x07WARNING:\x01 Communication is not allowed during technical timeouts！",
+                PREFIX
+        );
+            return Plugin_Continue;
+    }
+
     return Plugin_Continue;
 }
+
+
+    /*
+     * IMPORTANT:
+     *
+     * Do NOT return Plugin_Handled.
+     *
+     * Plugin_Continue allows the original chat message
+     * to continue normally.
+     */
