@@ -69,15 +69,62 @@ mp_rewind_match
 
 若技术暂停由裁判通过控制台发起（视为无对应队伍），任何玩家的 !unpause 都会被拒绝。裁判则可通过游戏内控制台执行 ```mp_unpause_match```以取消暂停，该命令将被视为由赛事管理方发起，会绕过一切队伍限制，无论暂停由哪一方发起、属于战术还是技术类型，均可直接解除，也是裁判在比赛中推荐的唯一解除方式。
 ### 比赛体验及广播程序
-插件对比赛的处理和指令反馈主要由 **"[CM]"** 来进行状态指示，如:
+插件对比赛的处理和指令反馈主要由 **"[CM]"** 来进行状态指示。V1.2.6 起所有文案都集中在插件内的文案表里，通过 ConVar ```sm_mp_text_style``` 切换三套**参照真实赛事转播/裁判台**的用词：
 
+| 值 | 风格 | 说明 |
+| --- | --- | --- |
+| ```0``` | 国际赛事（默认） | ESL / PGL / BLAST 式全大写关键词 + 队名 + 数字 |
+| ```1``` | 中文赛事 | 中文播报式，适合国内赛事 |
+| ```2``` | 国际赛事 + 规则提醒 | 在风格 0 上追加“暂停期间禁止交流”等规则提示 |
+
+**风格 0（国际赛事，默认）**
 ```
-[CM] Technical timeout ended. Get ready.
+[CM] TACTICAL TIMEOUT — Team A
+[CM] TIME 30 SEC | TIMEOUTS LEFT 2
+[CM] TACTICAL TIMEOUT ENDS IN 5 SEC
+[CM] TACTICAL TIMEOUT ENDED — RESUME
+[CM] TECHNICAL PAUSE — REFEREE
+[CM] NO DAMAGE DONE — ROUND CONTINUES AFTER THE PAUSE
+[CM] ROUND ALREADY IN PROGRESS — DAMAGE DONE, THE ROUND IS PLAYED OUT FIRST
+[CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE
+[CM] ROUND RESTORED — SCORE 7 : 7
 [CM] LIVE! LIVE! LIVE!
-[CM] Overtime started. Tactical timeouts refreshed: 1 per team.
-[CM] This round already produced damage, so it is played out first.
-[CM] Round restored. Score is back to 7:7, player statistics were restored as well.
 ```
-等
 
-当发送的原生暂停请求没有被服务器接受时，插件不会永久停留在暂停状态：会在聊天框提示 `[CM] CS:GO did not enter the pause state. The tactical timeout was not used.` 并**返还**该次战术暂停次数
+**风格 1（中文赛事）**
+```
+[CM] 战术暂停 — Team A
+[CM] 时长 30 秒 | 剩余次数 2
+[CM] 战术暂停剩余 5 秒
+[CM] 战术暂停结束 — 比赛继续
+[CM] 技术暂停 — 裁判
+[CM] 本回合尚无伤害 — 解除暂停后继续
+[CM] 本回合已产生伤害 — 先打完整回合
+[CM] 本回合无效 — 裁判输入 mp_rewind_match 回溯
+[CM] 回合已回溯 — 比分 7 : 7
+[CM] 比赛继续 — LIVE! LIVE! LIVE!
+```
+
+**风格 2（国际赛事 + 规则提醒）**：与风格 0 相同，但暂停类提示会追加规则提醒，例如
+```
+[CM] MATCH PAUSED — NO COMMUNICATION
+[CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE | NO COMMUNICATION
+```
+
+HUD（屏幕中央）也使用同一套风格，例如战术暂停：
+```
+TACTICAL TIMEOUT
+Team A
+30 SECONDS REMAINING
+TIMEOUTS LEFT 2
+```
+技术暂停（回合无效、等待裁判回溯）：
+```
+TECHNICAL PAUSE
+Team A
+ROUND INVALID — ADMIN: mp_rewind_match
+CALLING TEAM: TYPE !unpause
+```
+
+当发送的原生暂停请求没有被服务器接受时，插件不会永久停留在暂停状态：会提示 `TACTICAL TIMEOUT DECLINED — THE SERVER DID NOT ENTER PAUSE. NO TIMEOUT USED.`（风格 1 为“战术暂停未生效 — 服务器未进入暂停状态，次数未消耗”）并**返还**该次战术暂停次数
+

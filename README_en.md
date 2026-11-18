@@ -67,15 +67,62 @@ Players can immediately end a pause using the ```!unpause``` command, but **only
 
 If a technical timeout is initiated by a referee via the console (which is treated as having no corresponding team), any player’s ```!unpause``` command will be rejected. Referees may use the in-game console to execute ```mp_unpause_match``` to cancel the timeout. This command is treated as initiated by the tournament organizers and bypasses all team restrictions. Regardless of which side initiated the timeout or whether it is tactical or technical, it can be lifted immediately. This is also the only recommended method for referees to end a timeout during a match.
 ### Match Experience and Broadcast Procedures
-The plugin’s handling of matches and command feedback primarily uses **“[CM]”** to indicate status, such as:
+The plugin’s handling of matches and command feedback primarily uses **“[CM]”** to indicate status. Since V1.2.6 every text lives in a table inside the plugin and ```sm_mp_text_style``` switches between three packs modelled on real tournament broadcast / admin wording:
 
+| Value | Style | Description |
+| --- | --- | --- |
+| ```0``` | International broadcast (default) | ESL / PGL / BLAST style: upper-case keyword, team, numbers |
+| ```1``` | Chinese tournament | Chinese broadcast wording |
+| ```2``` | International + rule reminders | Style 0 plus "no communication during the pause" reminders |
+
+**Style 0 (international, default)**
 ```
-[CM] Technical timeout ended. Get ready.
+[CM] TACTICAL TIMEOUT — Team A
+[CM] TIME 30 SEC | TIMEOUTS LEFT 2
+[CM] TACTICAL TIMEOUT ENDS IN 5 SEC
+[CM] TACTICAL TIMEOUT ENDED — RESUME
+[CM] TECHNICAL PAUSE — REFEREE
+[CM] NO DAMAGE DONE — ROUND CONTINUES AFTER THE PAUSE
+[CM] ROUND ALREADY IN PROGRESS — DAMAGE DONE, THE ROUND IS PLAYED OUT FIRST
+[CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE
+[CM] ROUND RESTORED — SCORE 7 : 7
 [CM] LIVE! LIVE! LIVE!
-[CM] Overtime started. Tactical timeouts refreshed: 1 per team.
-[CM] This round already produced damage, so it is played out first.
-[CM] Round restored. Score is back to 7:7, player statistics were restored as well.
 ```
-etc.
 
-If the native pause request is not accepted by the server, the plugin never stays stuck in the pause state: it prints `[CM] CS:GO did not enter the pause state. The tactical timeout was not used.` in chat and **refunds** that tactical timeout
+**Style 1 (Chinese tournament)**
+```
+[CM] 战术暂停 — Team A
+[CM] 时长 30 秒 | 剩余次数 2
+[CM] 战术暂停剩余 5 秒
+[CM] 战术暂停结束 — 比赛继续
+[CM] 技术暂停 — 裁判
+[CM] 本回合尚无伤害 — 解除暂停后继续
+[CM] 本回合已产生伤害 — 先打完整回合
+[CM] 本回合无效 — 裁判输入 mp_rewind_match 回溯
+[CM] 回合已回溯 — 比分 7 : 7
+[CM] 比赛继续 — LIVE! LIVE! LIVE!
+```
+
+**Style 2 (international + rule reminders)**: identical to style 0, with rule lines such as
+```
+[CM] MATCH PAUSED — NO COMMUNICATION
+[CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE | NO COMMUNICATION
+```
+
+The centre HUD uses the same pack, for example a tactical timeout:
+```
+TACTICAL TIMEOUT
+Team A
+30 SECONDS REMAINING
+TIMEOUTS LEFT 2
+```
+and a technical pause on an invalid round:
+```
+TECHNICAL PAUSE
+Team A
+ROUND INVALID — ADMIN: mp_rewind_match
+CALLING TEAM: TYPE !unpause
+```
+
+If the native pause request is not accepted by the server, the plugin never stays stuck in the pause state: it prints `TACTICAL TIMEOUT DECLINED — THE SERVER DID NOT ENTER PAUSE. NO TIMEOUT USED.` in chat and **refunds** that tactical timeout
+

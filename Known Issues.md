@@ -12,6 +12,40 @@
 
 ~~7.换边后发起暂停会显示换边前的队伍名~~ （V1.2.4已修复）
 
+## V1.2.6 文案（参照真实赛事）
+
+### 1. 所有 `[CM]` 文案集中成一张表
+74 条文案（聊天 + 屏幕中央 HUD + 裁判提示 + 玩家报错）全部收进插件内的文案表 `g_sText[][]`，消息点只保留文案 ID（`CMT(...)`）。以后改措辞只动文案表，不用碰流程逻辑。
+
+### 2. 三套风格，运行时可切换
+新增 ConVar `sm_mp_text_style`，切换即时生效（ConVar 变更钩子），聊天与 HUD 同步：
+
+| 值 | 风格 | 参照 |
+| --- | --- | --- |
+| `0` | 国际赛事（默认） | ESL / PGL / BLAST 的“全大写关键词 + 队名 + 数字”写法 |
+| `1` | 中文赛事 | 中文播报式 |
+| `2` | 国际赛事 + 规则提醒 | 风格 0 上追加“暂停期间禁止交流”等规则提示 |
+
+### 3. 文案对照（节选）
+
+| 情形 | 风格 0（国际） | 风格 1（中文） |
+| --- | --- | --- |
+| 战术暂停开始 | `TACTICAL TIMEOUT — Team A` | `战术暂停 — Team A` |
+| 时长与剩余次数 | `TIME 30 SEC | TIMEOUTS LEFT 2` | `时长 30 秒 | 剩余次数 2` |
+| 结束前 5 秒 | `TACTICAL TIMEOUT ENDS IN 5 SEC` | `战术暂停剩余 5 秒` |
+| 战术暂停结束 | `TACTICAL TIMEOUT ENDED — RESUME` | `战术暂停结束 — 比赛继续` |
+| 技术暂停发起（裁判） | `TECHNICAL PAUSE — REFEREE` | `技术暂停 — 裁判` |
+| 无伤害直接暂停 | `NO DAMAGE DONE — ROUND CONTINUES AFTER THE PAUSE` | `本回合尚无伤害 — 解除暂停后继续` |
+| 有伤害等回合结束 | `ROUND ALREADY IN PROGRESS — DAMAGE DONE, THE ROUND IS PLAYED OUT FIRST` | `本回合已产生伤害 — 先打完整回合` |
+| 回合无效待回溯 | `ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE` | `本回合无效 — 裁判输入 mp_rewind_match 回溯` |
+| 回溯成功 | `ROUND RESTORED — SCORE 7 : 7` | `回合已回溯 — 比分 7 : 7` |
+| 回溯校验失败 | `ROUND RESTORE UNVERIFIED — SCORE 7:8 | ROUND 15 (SNAPSHOT 14)` | `回溯未通过校验 — 比分 7:8 | 回合 15（快照 14）` |
+| 恢复比赛 | `LIVE! LIVE! LIVE!` | `比赛继续 — LIVE! LIVE! LIVE!` |
+| 暂停期间发言 | `WARNING: NO COMMUNICATION DURING A TECHNICAL PAUSE` | `警告：技术暂停期间禁止交流` |
+
+### 4. 编译
+V1.2.6 使用 SourceMod 1.12.0.7230 编译器构建，`-E`（警告即错误）严格模式下 **0 error / 0 warning**。
+
 ## V1.2.5 新增功能与变更
 
 ### 1. 技术暂停按“是否已产生伤害”判定
