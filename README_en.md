@@ -32,12 +32,34 @@ Players can initiate a technical pause using ```!tech``` or the in-game console 
 A referee pause and a team pause use **different wording** in the warning UI and chat messages: a referee pause states that only the referee can resume the match, while a team pause states that the calling team may resume with ```!unpause```
 
 Technical timeouts have no time limit; only the command ```!unpause``` or the in-game console command ```mp_unpause_match``` can end a technical timeout.
-#### Round Handling During a Technical Timeout
-When a technical timeout is initiated, the current round is deemed invalid. The function ```CS_TerminateRound()``` is then executed to immediately void the round, and ```mp_pause_match``` is executed during the freeze period to enter the technical timeout phase.
+#### Round Handling During a Technical Timeout (damage-based since V1.2.5)
+When a technical timeout is requested, the plugin first checks whether the **current round has already produced damage** (any player taking damage counts):
+
+- **No damage yet**: the round is paused in place. It is **not invalidated and not restarted**; play resumes from the same point when the pause ends.
+- **Damage already done**: the round is no longer voided while live. It is **played out first** (so the result stays fair), the next round is paused during its freeze time, and the referee can then **restore** the previous round before it is replayed.
+
+Setting ```sm_mp_technical_damage_gate 0``` restores the previous behaviour (```CS_TerminateRound()``` immediately when the command is issued).
+
+#### Round Rewind (new in V1.2.5)
+The plugin takes a snapshot at every round start and uses the native CS:GO round backups for the restore:
+
+- **Score, economy, equipment, positions and the round counter** are restored by the native CS:GO round backup (```mp_backup_round_auto``` / ```mp_backup_round_file```). The plugin makes sure both ConVars are usable after the match config ran, and never overwrites a value another plugin (for example Get5) already set.
+- **Player statistics (kills / deaths / assists / MVPs)** are backed up and written back by the plugin, because the native backup does not contain them.
+
+The restore is confirmed by the referee: once the invalid round is over and the next round is paused, the referee runs
+```
+mp_rewind_match
+```
+from the console (rcon / server console), or ```!rewind``` from in-game as an administrator. **Every attempt reports its result in chat, successful or not.** After a successful restore the referee runs ```mp_unpause_match``` to replay the round.
+
+| ConVar | Default | Description |
+| --- | --- | --- |
+| ```sm_mp_technical_damage_gate``` | ```1``` | 1 = damage based (no damage: pause in place; damage: wait for the round to end); 0 = always terminate the round immediately (V1.2.4 behaviour) |
+| ```sm_mp_rewind_enabled``` | ```1``` | 1 = allow the referee to restore an invalidated round |
 #### Transition from Tactical Pause to Technical Pause
 When the match is already in a tactical pause state and a player issues ```!tech``` or an administrator issues ```mp_pause_match``` via the in-game console, this plugin will first restore the tactical pause count and end the tactical pause before initiating the technical pause, to prevent unintended consumption of tactical pause counts
 
-Additionally, the tactical pause limit used in the current round will be reset since the round is invalidated, meaning both teams may initiate tactical pauses after the technical pause ends
+The refunded timeout and the "timeout used this round" flag are both cleared, so a tactical pause may be called again during that round
 #### Technical Pause Chat Warnings
 Once the match enters a technical pause, the plugin will monitor ```say``` and ```say_team``` from T/CT players and automatically send warnings that communication is prohibited during the technical pause; however, it will not block chat content (spectators/HLTV are not warned, and commands starting with `!` `/` `.` are skipped)
 ### Unpause
@@ -51,6 +73,8 @@ The plugin’s handling of matches and command feedback primarily uses **“[CM]
 [CM] Technical timeout ended. Get ready.
 [CM] LIVE! LIVE! LIVE!
 [CM] Overtime started. Tactical timeouts refreshed: 1 per team.
+[CM] This round already produced damage, so it is played out first.
+[CM] Round restored. Score is back to 7:7, player statistics were restored as well.
 ```
 etc.
 
