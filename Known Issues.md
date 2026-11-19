@@ -16,6 +16,25 @@ This file records changes and fixes from earlier versions; it is not a list of c
 
 ~~7.换边后发起暂停会显示换边前的队伍名~~ （V1.2.4已修复）
 
+## V1.2.9 热身误判修复
+
+**问题**：V1.2.8 加入热身拦截后，即使比赛已经开始，`!pause` / `!tech` 仍提示 `热身阶段不可用`。
+
+**原因**：拦截只读取了游戏的 `m_bWarmupPeriod`（与 Get5 相同的读法）。该标志由游戏维护，若服务器从未执行 `mp_warmup_end`，或它在重启/换图后残留为真，插件就会一直认为处于热身；而热身阶段玩家仍能移动、对枪，看起来像"比赛已经开始"。
+
+**修复**：
+
+1. `IsWarmupActive()` 增加保护：只要 `m_totalRoundsPlayed > 0`（已经打过回合），就不再判定为热身，残留标志不会再误拦；
+2. 拦截提示改为可操作指引：`当前处于热身阶段 — 执行 mp_warmup_end 开始比赛`；
+3. 新增自检命令 `sm_mp_status`（`!mpstatus`），直接打印 `warmup=(flag)` / `freeze` / `paused` / `rounds` / `matchStarted` / `state` / `snapRound` / `backup` / `rewindPending` 等原始状态，便于区分"游戏确实在热身"与"插件读错"。
+
+**排查方法**：遇到类似提示时先执行 `!mpstatus`：
+
+- `warmup=1(flag=1) rounds=0` → 游戏确实还在热身，执行 `mp_warmup_end`（或设置 `mp_warmuptime`）即可；
+- `warmup=0 ...` → 不会再拦截；若命令仍异常，把该行输出发回来定位。
+
+编译：SourceMod 1.12.0.7230，`-E` 严格模式 **0 error / 0 warning**。
+
 ## V1.2.8 复查修复
 
 1. **`g_bRewindAuto` 漏清理导致快照停摆**：`EndTechnicalPause`、`BeginTechnicalPause`、`StartLegacyRoundTermination` 都补上了 `g_bRewindAuto = false;`。此前若在作废回合后 1 秒内解除暂停（或之后再次进入技术暂停），该标志会残留为 true，使 `Event_RoundStart` 永久跳过回合快照，整张图之后都无法回溯；旧模式下还可能误触发自动回溯。
