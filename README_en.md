@@ -47,6 +47,7 @@ V1.2.8 notes:
 - With `sm_mp_rewind_enabled 0` the "no damage" case does **not** void the round any more: it is paused in place and kept, so a round is never thrown away without a way back;
 - Tactical and technical pauses are refused during warmup, with a hint to run `mp_warmup_end`; a match that already played a round is never treated as warmup (fixed in V1.2.9);
 - If the game is unpaused from outside the plugin during a technical pause, the plugin releases its pause state within 5 seconds instead of staying stuck.
+- **A technical pause taken during the freeze time does not roll back** (V1.2.10): between rounds the round is paused and kept, so the scoreboard is never rolled back to the previous round start (it used to jump back to 0:0).
 
 #### Round Rewind (new in V1.2.5)
 The plugin takes a snapshot at every round start and uses the native CS:GO round backups for the restore:
