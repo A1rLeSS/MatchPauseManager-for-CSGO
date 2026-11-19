@@ -42,6 +42,12 @@ When a technical timeout is requested, the plugin first checks whether the **cur
 
 Setting `sm_mp_technical_damage_gate 0` restores the V1.2.4 behaviour: immediately void the round without restoring its previous state.
 
+V1.2.8 notes:
+
+- With `sm_mp_rewind_enabled 0` the "no damage" case does **not** void the round any more: it is paused in place and kept, so a round is never thrown away without a way back;
+- Tactical and technical pauses are refused during warmup;
+- If the game is unpaused from outside the plugin during a technical pause, the plugin releases its pause state within 5 seconds instead of staying stuck.
+
 #### Round Rewind (new in V1.2.5)
 The plugin takes a snapshot at every round start and uses the native CS:GO round backups for the restore:
 

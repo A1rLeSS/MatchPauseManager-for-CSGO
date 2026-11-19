@@ -16,6 +16,17 @@ This file records changes and fixes from earlier versions; it is not a list of c
 
 ~~7.换边后发起暂停会显示换边前的队伍名~~ （V1.2.4已修复）
 
+## V1.2.8 复查修复
+
+1. **`g_bRewindAuto` 漏清理导致快照停摆**：`EndTechnicalPause`、`BeginTechnicalPause`、`StartLegacyRoundTermination` 都补上了 `g_bRewindAuto = false;`。此前若在作废回合后 1 秒内解除暂停（或之后再次进入技术暂停），该标志会残留为 true，使 `Event_RoundStart` 永久跳过回合快照，整张图之后都无法回溯；旧模式下还可能误触发自动回溯。
+2. **关闭回溯时不再白丢回合**：`sm_mp_rewind_enabled 0` 时，"未产生伤害"分支改为就地暂停并保留回合（`BeginTechnicalPause(callerTeam, false)`），不会再出现"作废了却无法回退"的情况；该分支同时会提示回溯已关闭。
+3. **技术暂停缺少外部解除看门狗**：`Timer_TechnicalUI` 现在每秒检查 `IsCSGOActuallyPaused()`，连续 5 秒不在暂停状态就调用新增的 `AbortTechnicalPauseExternally()` 释放全部状态并提示 `TECHNICAL PAUSE ENDED BY THE SERVER`，不会卡在"已暂停"。
+4. **回合备份可能抓错回合**：`Timer_CaptureRoundBackup` 现在校验 `GetRoundsPlayed()` 与快照回合一致，若回合作废后 ConVar 已指向下一回合，则放弃抓取并写日志，避免回溯到错误的回合。
+5. **热身阶段拦截**：`StartTacticalPause` / `StartTechnicalPause` 在 `m_bWarmupPeriod` 时直接拒绝，不会再把热身回合作废。
+6. 新增文案 `TEXT_TECH_SERVER_ENDED`、`TEXT_GUARD_WARMUP`（三套风格均已补齐）。
+
+编译：SourceMod 1.12.0.7230，`-E`（警告即错误）严格模式 **0 error / 0 warning**。
+
 ## V1.2.7 技术暂停流程调整
 
 统一了两个版本的技术暂停流程：
