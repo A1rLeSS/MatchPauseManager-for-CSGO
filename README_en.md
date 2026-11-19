@@ -32,13 +32,13 @@ Players can initiate a technical pause using ```!tech``` or the in-game console 
 A referee pause and a team pause use **different wording** in the warning UI and chat messages: a referee pause states that only the referee can resume the match, while a team pause states that the calling team may resume with ```!unpause```
 
 Technical timeouts have no time limit; only the command ```!unpause``` or the in-game console command ```mp_unpause_match``` can end a technical timeout.
-#### Round Handling During a Technical Timeout (damage-based since V1.2.5)
+#### Round Handling During a Technical Timeout (damage-based, V1.2.7)
 When a technical timeout is requested, the plugin first checks whether the **current round has already produced damage** (any player taking damage counts):
 
-- **No damage yet**: the round is paused in place. It is **not invalidated and not restarted**; play resumes from the same point when the pause ends.
-- **Damage already done**: the round is no longer voided while live. It is **played out first** (so the result stays fair), the next round is paused during its freeze time, and the referee can then **restore** the previous round before it is replayed.
+- **No damage yet**: the round is **voided immediately** with ```CS_TerminateRound()```, paused during the Freeze Time that follows, and the **pre-round state is restored automatically** (score, economy, equipment, positions and the round counter come from the native CS:GO round backup, player statistics are written back by the plugin). No referee confirmation is needed for this rollback.
+- **Damage already done**: the round is not voided while live. It is **played out first** (so the result stays fair), the next round is paused during its freeze time, and the referee decides whether the round is **restored**.
 
-Setting ```sm_mp_technical_damage_gate 0``` restores the previous behaviour (```CS_TerminateRound()``` immediately when the command is issued).
+Setting ```sm_mp_technical_damage_gate 0``` restores the previous behaviour (```CS_TerminateRound()``` immediately when the command is issued, without any restore).
 
 #### Round Rewind (new in V1.2.5)
 The plugin takes a snapshot at every round start and uses the native CS:GO round backups for the restore:
@@ -46,7 +46,7 @@ The plugin takes a snapshot at every round start and uses the native CS:GO round
 - **Score, economy, equipment, positions and the round counter** are restored by the native CS:GO round backup (```mp_backup_round_auto``` / ```mp_backup_round_file```). The plugin makes sure both ConVars are usable after the match config ran, and never overwrites a value another plugin (for example Get5) already set.
 - **Player statistics (kills / deaths / assists / MVPs)** are backed up and written back by the plugin, because the native backup does not contain them.
 
-The restore is confirmed by the referee: once the invalid round is over and the next round is paused, the referee runs
+The restore is automatic when the round was voided before any damage (see above) and **referee-confirmed** when the round already had damage: once the invalid round is over and the next round is paused, the referee runs
 ```
 mp_rewind_match
 ```
@@ -82,7 +82,7 @@ The plugin’s handling of matches and command feedback primarily uses **“[CM]
 [CM] TACTICAL TIMEOUT ENDS IN 5 SEC
 [CM] TACTICAL TIMEOUT ENDED — RESUME
 [CM] TECHNICAL PAUSE — REFEREE
-[CM] NO DAMAGE DONE — ROUND CONTINUES AFTER THE PAUSE
+[CM] NO DAMAGE DONE — ROUND VOIDED, RESTORING ROUND START
 [CM] ROUND ALREADY IN PROGRESS — DAMAGE DONE, THE ROUND IS PLAYED OUT FIRST
 [CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE
 [CM] ROUND RESTORED — SCORE 7 : 7

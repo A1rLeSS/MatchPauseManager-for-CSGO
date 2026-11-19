@@ -33,13 +33,13 @@
 裁判发起与选手发起的技术暂停，在警告UI与聊天提示中使用**不同的文案**：裁判发起时提示只有裁判可以恢复比赛，选手发起时提示发起方队伍可使用```!unpause```恢复比赛
 
 技术暂停无倒计时限制，只有```!unpause```或游戏内控制台```mp_unpause_match```才会解除技术暂停状态
-#### 技术暂停时的回合处理（V1.2.5 起按“是否已产生伤害”判定）
+#### 技术暂停时的回合处理（V1.2.7 起按“是否已产生伤害”判定）
 技术暂停发起时，插件会先判断**当前回合是否已经产生伤害**（任意玩家受到伤害即视为已产生）：
 
-- **尚未产生伤害**：直接暂停当前回合，本回合**不判定无效、不重开**，解除暂停后从原地继续比赛；
-- **已经产生伤害**：不再强行作废回合，而是**先打完整回合**（保证结果公平），随后在下一回合冻结时间暂停，并由裁判确认后**回溯**该回合再重打。
+- **尚未产生伤害**：立即执行 ```CS_TerminateRound()``` **作废当前回合**，在随之而来的冻结时间内暂停，并**自动回溯到回合开始前的状态**（比分、经济、装备、站位、回合计数由 CS:GO 原生回合备份恢复，选手数据由插件写回）——这一步**不需要裁判确认**；
+- **已经产生伤害**：不强行作废回合，而是**先打完整回合**（保证结果公平），随后在下一回合冻结时间暂停，由**裁判确认**后再回溯该回合并重打。
 
-若需要恢复旧行为（指令一发出就立即 ```CS_TerminateRound()``` 作废回合并重开），设置 ```sm_mp_technical_damage_gate 0``` 即可。
+若需要恢复旧行为（技术暂停只作废回合并重开、不做任何回溯），设置 ```sm_mp_technical_damage_gate 0``` 即可。
 
 #### 回合回溯 / Rewind（V1.2.5 新增）
 每回合开始时插件都会做一次快照，并借助 CS:GO 自带的回合备份完成回溯：
@@ -47,7 +47,7 @@
 - **比分、经济、装备、站位、回合计数**：由 CS:GO 原生回合备份（```mp_backup_round_auto``` / ```mp_backup_round_file```）恢复。插件会在比赛配置执行后确保这两个 ConVar 可用（若已被 Get5 等插件设置，则不会覆盖原有值）；
 - **选手数据（击杀 / 死亡 / 助攻 / MVP）**：由插件自己备份，并在回溯后写回（CS:GO 原生备份不含这些数据）。
 
-回溯由裁判确认执行：在回合被判定无效并暂停后，于控制台（rcon / 服务器控制台）执行
+回溯的执行方式分两种：**无伤害作废的回合会自动回溯**（见上一节）；**已有伤害的回合由裁判确认回溯**——在回合被判定无效并暂停后，于控制台（rcon / 服务器控制台）执行
 ```
 mp_rewind_match
 ```
@@ -55,7 +55,7 @@ mp_rewind_match
 
 | ConVar | 默认值 | 说明 |
 | --- | --- | --- |
-| ```sm_mp_technical_damage_gate``` | ```1``` | 1 = 按伤害判定（无伤害直接暂停、有伤害等回合结束）；0 = 始终立即作废回合并重开（V1.2.4 行为） |
+| ```sm_mp_technical_damage_gate``` | ```1``` | 1 = 按伤害判定（无伤害：作废回合并自动回溯；有伤害：等回合结束、裁判确认回溯）；0 = 只作废回合并重开、不回溯（V1.2.4 行为） |
 | ```sm_mp_rewind_enabled``` | ```1``` | 1 = 无效回合允许裁判回溯 |
 
 #### 战术暂停转换至技术暂停
@@ -84,7 +84,7 @@ mp_rewind_match
 [CM] TACTICAL TIMEOUT ENDS IN 5 SEC
 [CM] TACTICAL TIMEOUT ENDED — RESUME
 [CM] TECHNICAL PAUSE — REFEREE
-[CM] NO DAMAGE DONE — ROUND CONTINUES AFTER THE PAUSE
+[CM] NO DAMAGE DONE — ROUND VOIDED, RESTORING ROUND START
 [CM] ROUND ALREADY IN PROGRESS — DAMAGE DONE, THE ROUND IS PLAYED OUT FIRST
 [CM] ROUND INVALID — ADMIN: mp_rewind_match TO RESTORE
 [CM] ROUND RESTORED — SCORE 7 : 7
