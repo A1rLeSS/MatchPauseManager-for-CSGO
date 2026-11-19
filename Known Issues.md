@@ -1,3 +1,7 @@
+# Historical release notes
+
+This file records changes and fixes from earlier versions; it is not a list of current known issues. For current installation and usage instructions, see [README](README.md) or [README in English](README_en.md).
+
 ~~1.玩家发出指令时可能会多次检查暂停状态并返回控制台提示~~（V1.2.0已修复）
 
 ~~2.缺少战术暂停剩余次数的提示~~ （V1.2.0已修复）

@@ -1,12 +1,15 @@
-**Read this in other languages:**
+**语言：**
 [English](README_en.md) | [中文](README.md) 
-# Match-Pause-Manager-for-CSGO
-适用于CSGO竞技比赛服务器，基于Source Mod 1.11.0编译的仿比赛风格的游戏暂停处理插件（源码同时兼容 SourceMod 1.12.x，V1.2.4 由 1.12.0 编译器构建）
+# MatchPauseManager for CS:GO
+MatchPauseManager 是一个用于 CS:GO 竞技服务器的 SourceMod 插件，帮助队伍和裁判按比赛规则管理战术暂停与技术暂停，并处理回合无效和回溯。
 
-此插件主要用于竞技比赛时的**战术暂停（Tactical Pause）**和**技术暂停（Technical Pause）**，尽量按照职业比赛中的暂停规则对暂停次数、时长、回合有效性（技术暂停触发）及暂停后的回合重启进行处理
+源码支持 SourceMod 1.11.0 和 1.12.x；V1.2.7 使用 SourceMod 1.12.0 编译。
 
-## 使用方法
-下载最新的Release内的**Match Pause Manager VX.X.X.zip**,将压缩包内的Match Pause Manager.smx解压至：**\Counter-Strike Global Offensive\csgo\addons\sourcemod\plugins**，并确定已在CSGO游戏启动项内添加```-insecure```项以允许游戏加载第三方软件
+插件用于管理竞技比赛中的**战术暂停**和**技术暂停**，并按配置处理暂停次数、时长以及技术暂停期间的回合判定与回溯。
+
+## 安装
+从 [Releases](https://github.com/A1rLeSS/MatchPauseManager-for-CSGO/releases) 下载最新的 `Match Pause Manager VX.X.X.zip`，将其中的 `Match Pause Manager.smx` 放入 `csgo/addons/sourcemod/plugins/`。本地客户端测试时，需要在 CS:GO 启动选项中添加 `-insecure`；专用服务器请将插件安装到服务器的 SourceMod 插件目录。
+
 ## 功能特性
 ### 暂停UI
 目前插件已初步实现调用游戏内警告UI以展示暂停相关信息，并且能够正确读取比赛自定义队伍名，而非默认的“TEAM A（B）”或“TEAM CT（T）”
